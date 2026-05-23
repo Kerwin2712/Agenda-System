@@ -42,5 +42,4 @@ El proyecto "Agenda tu cita" es un sistema SaaS de agendamiento. El backend se d
 - Se requiere la cabecera `Authorization: Bearer <token>` para consumir el dashboard.
 - Toda la especificación detallada está en `docs/API_FRONTEND.md`.
 
-### Siguientes Pasos
-- Esperar aprobación explícita del usuario en el flujo de Git para proceder con commits en el repositorio local.
+- Subida inicial del backend modular y su documentación técnica exitosamente completada en la rama `main` de GitHub. Listo para que el desarrollador frontend consuma la API y los endpoints documentados.
