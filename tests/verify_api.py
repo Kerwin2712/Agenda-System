@@ -1,11 +1,16 @@
+import os
+import sys
 import json
+
+# Limitar comentarios a frases en español cortas
+# Agregar directorio padre al path para importar modulo app
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from app import create_app
 from app.extensions import db
 from app.models.user import User
-
 from app.config import Config
 
-# Limitar comentarios a frases en español cortas
 # Script de pruebas del API usando Flask Test Client
 
 class TestConfig(Config):

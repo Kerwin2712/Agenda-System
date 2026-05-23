@@ -48,11 +48,12 @@ Agenda-System/
 │       └── dashboard.py     # Endpoints del Dashboard (protegidos con JWT)
 ├── docs/
 │   └── API_FRONTEND.md     # Guía técnica detallada para el desarrollador de React
+├── tests/
+│   └── verify_api.py       # Script autónomo de pruebas de integración local
 ├── .env.example            # Plantilla de variables de entorno del proyecto
 ├── .env                    # Configuración activa del entorno (ignorado en Git)
 ├── requirements.txt        # Dependencias del backend de Python
-├── run.py                  # Servidor de desarrollo local de Flask
-└── verify_api.py           # Script autónomo de pruebas de integración local
+└── run.py                  # Servidor de desarrollo local de Flask
 ```
 
 ---
@@ -123,7 +124,7 @@ Hemos provisto un script autónomo de verificación que levanta un cliente de pr
 Para ejecutar las pruebas en tu entorno activo:
 
 ```powershell
-python verify_api.py
+python tests/verify_api.py
 ```
 
 ---
