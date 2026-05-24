@@ -11,9 +11,18 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
     name = db.Column(db.String(80), nullable=True)
+    public_slug = db.Column(db.String(80), unique=True, nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    def __init__(self, **kwargs):
+        # Inicializar y autogenerar public_slug si no existe
+        super(User, self).__init__(**kwargs)
+        if not self.public_slug and self.email:
+            username = self.email.split('@')[0]
+            import re
+            self.public_slug = re.sub(r'[^a-zA-Z0-9-]', '', username).lower()
+            
     def set_password(self, password):
         # Hashear contrasenia con werkzeug
         if not password or len(password) < 6:
@@ -32,6 +41,7 @@ class User(db.Model):
             "id": self.id,
             "email": self.email,
             "name": self.name,
+            "public_slug": self.public_slug,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }

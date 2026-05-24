@@ -42,6 +42,30 @@ El proyecto "Agenda tu cita" es un sistema SaaS de agendamiento. El backend se d
 - Se requiere la cabecera `Authorization: Bearer <token>` para consumir el dashboard.
 - Toda la especificación detallada está en `docs/API_FRONTEND.md`.
 
-- Subida inicial del backend modular y su documentación técnica exitosamente completada en la rama `main` de GitHub.
-- Creado y estructurado el archivo central `README.md` con la guía de inicio rápido (entorno virtual venv, instalación en Windows con Python 3.13, variables de entorno, y scripts de pruebas unitarias). Se mantuvo `requirements.txt` limpio para evitar errores de sintaxis en `pip`. Listo para que el desarrollador frontend y el equipo de backend trabajen en el proyecto.
 - **Limpieza de la Raíz del Proyecto:** Trasladamos el script de verificación automatizado `verify_api.py` de la raíz del proyecto al nuevo directorio `tests/` (`tests/verify_api.py`). Esto mantiene la raíz del proyecto limpia y optimizada para producción/despliegue, dejando solo archivos esenciales de despliegue. Adaptamos dinámicamente el `sys.path` del script para garantizar que se ejecute sin problemas de importación.
+
+## [2026-05-24] - Refactorización de Disponibilidad Grupal y Enrutamiento por Slugs
+
+### Contexto de Negocio
+Para resolver la problemática del solapamiento de agendas (overbooking) en un único profesional o recursos compartidos, se rediseñó la arquitectura de base de datos introduciendo **Grupos de Eventos** (`event_groups`). Asimismo, para facilitar la interacción y el marketing directo, se implementó un esquema de acceso público amigable basado en slugs (`public_slug` para administradores y `slug` para eventos) en lugar de exponer identificadores numéricos directos de base de datos.
+
+### Cambios Realizados
+1. **Refactorización de Modelos Relacionales:**
+   - **`User`**: Adición del campo obligatorio y único `public_slug`. Implementación de una rutina automática en el constructor del modelo para autogenerar el slug a partir del email si no se proporciona explícitamente, garantizando compatibilidad con el endpoint de registro existente.
+   - **`EventGroup`**: Modelo contenedor asociado al administrador que agrupa eventos que comparten la misma disponibilidad horaria.
+   - **`GroupAvailability`**: Registra la disponibilidad horaria semanal recurrente asociada directamente al `EventGroup` (en lugar de a eventos individuales). Indexación en `(group_id, day_of_week)`.
+   - **`Event`**: Incorporación de `slug`, `is_public` (default `True`), y `user_id` de forma complementaria para declarar la restricción de unicidad compuesta `UniqueConstraint('user_id', 'slug')`. Esto previene de forma estricta que un mismo administrador repita URLs públicas.
+2. **Creación de la API Pública:**
+   - Implementado el módulo `app/routes/public.py` y registrado el Blueprint `public_bp` con el prefijo `/api/public`.
+   - Endpoints públicos libres de tokens JWT creados:
+     - `GET /api/public/users/<public_slug>/events`: Directorio público que filtra estrictamente por eventos activos y públicos.
+     - `GET /api/public/users/<public_slug>/events/<event_slug>`: Enlace directo que retorna los detalles del evento si está activo (ignora el flag `is_public` para permitir eventos privados con enlace directo).
+3. **Actualización Documental:**
+   - Editado `docs/API_FRONTEND.md` detallando las nuevas especificaciones JSON para la API pública.
+   - Editada esta bitácora en cumplimiento estricto con las reglas de flujo de trabajo del agente.
+
+### Decisiones Técnicas
+- **Exclusividad compuesta `(user_id, slug)` en `Event`**: Se decidió mantener el `user_id` de forma redundante pero necesaria en la tabla `events` a fin de poder declarar un índice de unicidad que impida colisiones de URL a nivel del mismo administrador, sin forzar búsquedas recursivas complejas que penalicen el rendimiento de la base de datos.
+- **Autogeneración de Slugs**: Para evitar que la adición del campo no nulo `public_slug` rompa los registros del frontend que no envíen dicho campo, el backend procesa automáticamente la parte local del correo electrónico de registro para crear un slug único e higienizado.
+- **Regla Estricta de Parada**: Se detiene toda interacción con herramientas Git. El agente no realizará commits automáticos hasta recibir confirmación explícitamente.
+

@@ -165,9 +165,87 @@ Ocurre si el token es válido pero el usuario asociado a dicho token fue elimina
     "id": 1,
     "email": "usuario@ejemplo.com",
     "name": "Juan Pérez",
+    "public_slug": "usuario",
     "created_at": "2026-05-23T18:18:16.123456",
     "updated_at": "2026-05-23T18:18:16.123456"
   }
+}
+```
+
+---
+
+### 4. API Pública (Sin Autenticación)
+
+Estas rutas permiten que clientes externos (no registrados) puedan ver el catálogo de eventos/servicios de un comercio y agendar citas a través de enlaces directos. **No requieren cabecera `Authorization`.**
+
+#### A. Directorio Público de Eventos de un Usuario
+Obtiene todos los eventos de un administrador basados en su `public_slug` que estén **activos** (`is_active = true`) y sean **públicos** (`is_public = true`).
+
+* **Ruta:** `/api/public/users/<public_slug>/events`
+* **Método:** `GET`
+
+##### Respuestas del Servidor:
+
+###### 🔴 Código `404 Not Found` (Usuario no existe)
+```json
+{
+  "error": "Usuario no encontrado"
+}
+```
+
+###### 🟢 Código `200 OK` (Búsqueda Exitosa)
+Retorna una lista con la información de todos los eventos configurados como públicos.
+```json
+[
+  {
+    "id": 1,
+    "group_id": 1,
+    "user_id": 1,
+    "title": "Corte de Cabello Premium",
+    "description": "Incluye lavado y perfilado de barba.",
+    "slug": "corte-cabello-premium",
+    "duration": 45,
+    "buffer_time": 15,
+    "is_active": true,
+    "is_public": true,
+    "created_at": "2026-05-24T10:20:00.123456",
+    "updated_at": "2026-05-24T10:20:00.123456"
+  }
+]
+```
+
+---
+
+#### B. Detalle de un Evento Específico (Enlace Directo)
+Obtiene la información de un servicio específico utilizando el slug del usuario y del evento. Filtra estrictamente por evento **activo** (`is_active = true`), ignorando si es público.
+
+* **Ruta:** `/api/public/users/<public_slug>/events/<event_slug>`
+* **Método:** `GET`
+
+##### Respuestas del Servidor:
+
+###### 🔴 Código `404 Not Found` (Usuario no existe, o evento inexistente/inactivo)
+```json
+{
+  "error": "Evento no encontrado o inactivo"
+}
+```
+
+###### 🟢 Código `200 OK` (Búsqueda Exitosa)
+```json
+{
+  "id": 2,
+  "group_id": 1,
+  "user_id": 1,
+  "title": "Tinte Especializado (Privado)",
+  "description": "Servicio de tinte personalizado.",
+  "slug": "tinte-especializado-privado",
+  "duration": 90,
+  "buffer_time": 30,
+  "is_active": true,
+  "is_public": false,
+  "created_at": "2026-05-24T10:25:00.123456",
+  "updated_at": "2026-05-24T10:25:00.123456"
 }
 ```
 

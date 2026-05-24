@@ -17,9 +17,11 @@ def create_app(config_class=Config):
     # Registrar blueprints
     from app.routes.auth import auth_bp
     from app.routes.dashboard import dashboard_bp
+    from app.routes.public import public_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
+    app.register_blueprint(public_bp, url_prefix='/api/public')
     
     # Manejo de errores global en formato JSON
     @app.errorhandler(404)
