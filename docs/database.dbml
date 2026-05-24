@@ -7,25 +7,33 @@ Table users {
   email varchar(120) [unique, not null, note: "Correo de acceso del administrador"]
   password_hash varchar(255) [not null, note: "Contraseña hasheada"]
   name varchar(80) [note: "Nombre del comercio o administrador"]
+  public_slug varchar(80) [unique, not null, note: "Slug único para la URL del comercio"]
   role varchar(20) [default: "admin", note: "Rol del usuario (admin por defecto)"]
   created_at timestamp [default: `now()`]
   updated_at timestamp [default: `now()`]
 }
 
-// TABLA MODIFICADA: El evento ahora pertenece a un grupo obligatoriamente
+// El evento pertenece a un grupo de disponibilidad y tiene slugs de enrutamiento
 Table events {
   id integer [primary key, increment]
   group_id integer [ref: > event_groups.id, not null, note: "Define cuándo se puede agendar"]
+  user_id integer [ref: > users.id, not null, note: "Dueño del evento para validación de slugs"]
   title varchar(150) [not null]
   description text 
+  slug varchar(80) [not null, note: "Slug de URL para este servicio"]
   duration integer [not null, note: "Duración en minutos"]
   buffer_time integer [default: 0]
   is_active boolean [default: true]
+  is_public boolean [default: true, note: "Si el evento es visible en el directorio público"]
   created_at timestamp [default: `now()`]
   updated_at timestamp [default: `now()`]
+
+  Indexes {
+    (user_id, slug) [unique, name: "uq_user_event_slug"]
+  }
 }
 
-// TABLA MODIFICADA: La disponibilidad ahora pertenece al GRUPO
+// La disponibilidad pertenece al GRUPO
 Table group_availabilities {
   id integer [primary key, increment]
   group_id integer [ref: > event_groups.id, not null]
@@ -57,7 +65,7 @@ Table appointments {
   }
 }
 
-// NUEVA TABLA: Controla la disponibilidad compartida
+// Controla la disponibilidad compartida
 Table event_groups {
   id integer [primary key, increment]
   user_id integer [ref: > users.id, not null]
@@ -66,4 +74,3 @@ Table event_groups {
   created_at timestamp [default: `now()`]
   updated_at timestamp [default: `now()`]
 }
-
