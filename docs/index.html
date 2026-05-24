@@ -374,9 +374,171 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Botón de Menú Móvil (Responsive Toggle) */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 48px;
+            height: 48px;
+            background: rgba(13, 15, 23, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mobile-toggle:hover {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--accent-primary);
+        }
+
+        .mobile-toggle svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Overlay para móviles */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 90;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Media Queries para diseño responsive completo */
+        @media (max-width: 992px) {
+            aside {
+                left: -320px;
+                transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: none;
+            }
+
+            aside.open {
+                left: 0;
+                box-shadow: 10px 0 40px rgba(0, 0, 0, 0.6);
+            }
+
+            .mobile-toggle {
+                display: flex;
+            }
+
+            .sidebar-overlay {
+                display: block;
+            }
+
+            main {
+                margin-left: 0;
+                width: 100%;
+                padding: 90px 24px 48px 24px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            .db-split-container {
+                flex-direction: column;
+                height: auto;
+                min-height: unset;
+                gap: 24px;
+            }
+
+            .dbml-code-panel {
+                width: 100%;
+                height: 380px;
+            }
+
+            .diagram-panel {
+                width: 100%;
+                height: 480px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            main {
+                padding: 85px 16px 36px 16px;
+            }
+
+            h1 {
+                font-size: 26px;
+                letter-spacing: -0.5px;
+            }
+
+            .subtitle {
+                font-size: 14px;
+            }
+
+            #doc-view h2 {
+                font-size: 20px;
+                margin-top: 36px;
+                margin-bottom: 12px;
+            }
+
+            #doc-view h3 {
+                font-size: 16px;
+                margin-top: 28px;
+                margin-bottom: 10px;
+            }
+
+            blockquote {
+                padding: 12px 16px;
+                margin: 18px 0;
+            }
+
+            pre {
+                padding: 14px !important;
+                margin: 18px 0 !important;
+                border-radius: 8px !important;
+            }
+
+            code {
+                font-size: 12px !important;
+            }
+
+            .copy-btn {
+                top: 8px;
+                right: 8px;
+                padding: 4px 8px;
+                font-size: 10px;
+            }
+        }
     </style>
 </head>
 <body>
+
+    <!-- Botón flotante para menú móvil -->
+    <button class="mobile-toggle" id="mobile-menu-toggle" onclick="toggleSidebar()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+    </button>
+
+    <!-- Overlay oscuro de fondo en móviles -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
     <!-- Panel de Navegacion Lateral -->
     <aside>
@@ -442,8 +604,53 @@
             }
         });
 
+        // Controles de barra lateral para móviles
+        function toggleSidebar() {
+            const aside = document.querySelector('aside');
+            const toggleBtn = document.getElementById('mobile-menu-toggle');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            aside.classList.toggle('open');
+            toggleBtn.classList.toggle('active');
+            overlay.classList.toggle('active');
+            
+            if (aside.classList.contains('open')) {
+                toggleBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                `;
+            } else {
+                toggleBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                `;
+            }
+        }
+
+        function closeSidebar() {
+            const aside = document.querySelector('aside');
+            const toggleBtn = document.getElementById('mobile-menu-toggle');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            if (aside.classList.contains('open')) {
+                aside.classList.remove('open');
+                toggleBtn.classList.remove('active');
+                overlay.classList.remove('active');
+                toggleBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                `;
+            }
+        }
+
         // Cargar documento dinamicamente de la API JSON
         function loadDoc(type) {
+            // Cerrar menú móvil si está abierto
+            closeSidebar();
+
             // Desactivar modo de pantalla ancha si venimos del diagrama
             document.getElementById('main-content').classList.remove('wide-mode');
 
@@ -492,6 +699,9 @@
 
         // Cargar vista de pantalla dividida (Código DBML y Diagrama ER)
         function loadDiagram() {
+            // Cerrar menú móvil si está abierto
+            closeSidebar();
+
             // Habilitar modo de pantalla ancha para maxima comodidad
             document.getElementById('main-content').classList.add('wide-mode');
 

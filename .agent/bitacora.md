@@ -125,11 +125,15 @@ Para que el equipo de frontend, soporte y administradores cuente con una referen
 3. **Mantenimiento y Estándares de Estilo:**
    - Corregidas advertencias de compatibilidad CSS reordenando las propiedades `background-clip: text` y `-webkit-background-clip: text` en las clases `.logo-text` y `h1` de `docs/index.html` para solventar avisos del linter del editor.
    - Actualizado el `README.md` en su sección final agregando el manual interactivo de local y su enrutamiento.
-   - Registro de la limpieza y sincronización final de todos los cambios con el repositorio remoto.
+   - **Optimización Responsive Móvil:** Se implementó una maquetación 100% responsiva (Mobile-First y adaptación fluida) en `docs/index.html` mediante media queries, ajustando paddings, fuentes y el flujo de los bloques markdown.
+   - **Menú y Botón de Toggle para Teléfonos/Tablets:** Integrado un botón flotante hamburguesa moderno de Glassmorphic SVG y un overlay difuminado (`.sidebar-overlay`) para abrir y cerrar el menú lateral en dispositivos pequeños, cerrando el menú automáticamente al seleccionar cualquier sección para mejorar la experiencia de lectura.
+   - **Apilamiento del ERD en Móviles:** Rediseñado el contenedor de pantalla dividida (`.db-split-container`) del diagrama de base de datos para que en dispositivos móviles se apile verticalmente a pantalla completa en lugar de horizontal, permitiendo una visualización cómoda del editor de solo lectura DBML y del diagrama ER Mermaid.js de forma secuencial.
 
 ### Decisiones Técnicas
 - **Mermaid.js vía Cliente:** Se optó por renderizar vectorialmente el diagrama ER en el navegador del usuario utilizando Mermaid.js a través de CDN, lo cual evita instalar costosas dependencias de compilación gráfica o backend monolítico en Python, garantizando excelente portabilidad en Windows y excelente fluidez en local.
 - **División Dual (Split Screen):** Emular el flujo de dbdiagram.io permite que los desarrolladores puedan leer la definición exacta de tipos de datos a la izquierda mientras interactúan visualmente con el diagrama de relaciones a la derecha.
 - **Limpieza Estricta de Warnings:** Ajuste del orden de propiedades CSS para satisfacer el linter estático del IDE y mantener un codebase libre de advertencias.
+- **Diseño Móvil Nativo y CSS Puro:** Se implementó el soporte responsivo mediante CSS vanilla estricto, manteniendo un rendimiento móvil del 100% libre de frameworks pesados como Bootstrap o TailwindCSS.
+
 
 
