@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación Interactiva - Agenda System</title>
+    <!-- Google Fonts Outfit e Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- PrismJS para resaltado de sintaxis -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <style>
+        /* Variables y Reset */
+        :root {
+            --bg-color: #08090d;
+            --sidebar-color: rgba(13, 15, 23, 0.75);
+            --card-color: #11131c;
+            --border-color: rgba(255, 255, 255, 0.06);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Barra Lateral (Sidebar) */
+        aside {
+            width: 320px;
+            background: var(--sidebar-color);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-right: 1px solid var(--border-color);
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+        }
+
+        .logo-container {
+            margin-bottom: 48px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: var(--gradient);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 20px;
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+        }
+
+        .logo-text {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 22px;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #ffffff, #a78bfa);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            padding-left: 8px;
+            margin-top: 24px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+            text-align: left;
+            padding: 14px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            margin-bottom: 8px;
+            width: 100%;
+        }
+
+        .nav-btn:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.03);
+            padding-left: 20px;
+        }
+
+        .nav-btn.active {
+            color: white;
+            background: var(--gradient);
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.25);
+            font-weight: 600;
+        }
+
+        /* Area Principal de Contenido */
+        main {
+            margin-left: 320px;
+            flex-grow: 1;
+            padding: 60px 80px;
+            max-width: 1300px;
+            width: calc(100% - 320px);
+            transition: all 0.3s ease;
+        }
+
+        main.wide-mode {
+            max-width: 100%;
+        }
+
+        .header-content {
+            margin-bottom: 48px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 24px;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 42px;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+            background: linear-gradient(to right, #ffffff, #d8b4fe);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        /* Estilos Markdown Parseado */
+        #doc-view {
+            animation: fadeIn 0.4s ease forwards;
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        #doc-view h2 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 26px;
+            margin-top: 48px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 8px;
+            color: white;
+        }
+
+        #doc-view h3 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 20px;
+            margin-top: 36px;
+            margin-bottom: 16px;
+            color: #e9d5ff;
+        }
+
+        #doc-view h4 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            margin-top: 24px;
+            margin-bottom: 12px;
+            color: white;
+        }
+
+        #doc-view p {
+            margin-bottom: 20px;
+            color: #d1d5db;
+        }
+
+        #doc-view ul, #doc-view ol {
+            margin-bottom: 20px;
+            padding-left: 24px;
+        }
+
+        #doc-view li {
+            margin-bottom: 8px;
+            color: #d1d5db;
+        }
+
+        /* Alertas Personalizadas estilo Github */
+        blockquote {
+            background: rgba(99, 102, 241, 0.08);
+            border-left: 4px solid var(--accent-primary);
+            padding: 16px 20px;
+            border-radius: 0 12px 12px 0;
+            margin: 24px 0;
+            color: #e0e7ff;
+        }
+
+        blockquote p {
+            margin-bottom: 0 !important;
+            font-size: 14px;
+        }
+
+        /* Bloques de Código */
+        pre {
+            background-color: var(--card-color) !important;
+            border: 1px solid var(--border-color);
+            border-radius: 12px !important;
+            padding: 20px !important;
+            margin: 24px 0 !important;
+            position: relative;
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+        }
+
+        code {
+            font-family: 'Fira Code', 'Courier New', Courier, monospace !important;
+            font-size: 13.5px !important;
+        }
+
+        /* Boton para Copiar */
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .copy-btn:hover {
+            background: var(--gradient);
+            color: white;
+            border-color: transparent;
+        }
+
+        /* DISEÑO DE PANTALLA DIVIDIDA (Visor de Base de Datos estilo dbdiagram.io) */
+        .db-split-container {
+            display: flex;
+            gap: 24px;
+            width: 100%;
+            height: calc(100vh - 240px);
+            min-height: 550px;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .dbml-code-panel {
+            width: 40%;
+            background: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: var(--shadow);
+        }
+
+        .dbml-code-panel pre {
+            margin: 0 !important;
+            border: none !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+        }
+
+        .diagram-panel {
+            width: 60%;
+            background: #0b0d15;
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: auto;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .diagram-panel-title {
+            position: absolute;
+            top: 16px;
+            left: 20px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .mermaid-wrapper {
+            margin-top: 24px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Sobreescribir estilos Mermaid para tema oscuro */
+        .mermaid svg {
+            max-width: 100% !important;
+            height: auto !important;
+        }
+
+        /* Animación Fade In */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Loading Spinner */
+        .loader {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 0;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(99, 102, 241, 0.1);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Panel de Navegacion Lateral -->
+    <aside>
+        <div class="logo-container">
+            <div class="logo-icon">A</div>
+            <div class="logo-text">Agenda System</div>
+        </div>
+        
+        <p class="nav-section-title">Primeros Pasos</p>
+        <button class="nav-btn active" id="btn-readme" onclick="loadDoc('readme')">
+            <span>📖</span> Guía de Inicio (README)
+        </button>
+
+        <p class="nav-section-title">Manuales de Desarrollo</p>
+        <button class="nav-btn" id="btn-api" onclick="loadDoc('api-frontend')">
+            <span>🚀</span> API del Frontend
+        </button>
+        <button class="nav-btn" id="btn-db" onclick="loadDoc('db-guide')">
+            <span>💾</span> Guía de Base de Datos
+        </button>
+
+        <p class="nav-section-title">Esquemas Conceptuales</p>
+        <button class="nav-btn" id="btn-diagram" onclick="loadDiagram()">
+            <span>📊</span> Diagrama de BD (ERD)
+        </button>
+    </aside>
+
+    <!-- Visualizador Central de Contenido -->
+    <main id="main-content">
+        <div class="header-content">
+            <h1 id="main-title">Guía de Inicio</h1>
+            <p class="subtitle" id="main-desc">Arquitectura modular del backend, requisitos, instalación y tests.</p>
+        </div>
+
+        <!-- Vista Dinamica de Documentacion o Split-Screen -->
+        <section id="doc-view">
+            <!-- Cargado dinamicamente -->
+        </section>
+    </main>
+
+    <!-- Marked para Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- PrismJS para formateado de codigo -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-http.min.js"></script>
+    <!-- Mermaid para diagramas de bases de datos -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+
+    <script>
+        // Inicializar Mermaid en modo oscuro por defecto
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'dark',
+            securityLevel: 'loose',
+            themeVariables: {
+                background: '#0b0d15',
+                primaryColor: '#1e1b4b',
+                primaryTextColor: '#f3f4f6',
+                lineColor: '#6366f1',
+                secondaryColor: '#312e81',
+                tertiaryColor: '#11131c'
+            }
+        });
+
+        // Cargar documento dinamicamente de la API JSON
+        function loadDoc(type) {
+            // Desactivar modo de pantalla ancha si venimos del diagrama
+            document.getElementById('main-content').classList.remove('wide-mode');
+
+            // Actualizar estado de botones
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            if (type === 'readme') {
+                document.getElementById('btn-readme').classList.add('active');
+                document.getElementById('main-title').innerText = "Guía de Inicio";
+                document.getElementById('main-desc').innerText = "Arquitectura modular del backend, requisitos, instalación y pruebas de integración.";
+            } else if (type === 'api-frontend') {
+                document.getElementById('btn-api').classList.add('active');
+                document.getElementById('main-title').innerText = "API del Frontend";
+                document.getElementById('main-desc').innerText = "Especificación técnica e integración de endpoints para desarrolladores.";
+            } else {
+                document.getElementById('btn-db').classList.add('active');
+                document.getElementById('main-title').innerText = "Guía de Base de Datos";
+                document.getElementById('main-desc').innerText = "Esquema relacional, estructuras de tablas y lógica de disponibilidad compartida.";
+            }
+
+            // Spinner de carga
+            const view = document.getElementById('doc-view');
+            view.innerHTML = `
+                <div class="loader">
+                    <div class="spinner"></div>
+                </div>
+            `;
+
+            // Consumir la API de documentacion local
+            fetch(`/api/docs/${type}`)
+                .then(res => {
+                    if (!res.ok) throw new Error("Fallo al obtener la documentacion");
+                    return res.json();
+                })
+                .then(data => {
+                    // Procesar Markdown a HTML
+                    view.innerHTML = marked.parse(data.markdown);
+                    
+                    // Inicializar botones de copiado y PrismJS
+                    addCopyButtons();
+                    Prism.highlightAll();
+                })
+                .catch(err => {
+                    view.innerHTML = `<p style="color: #ef4444; font-weight: 500;">Error: No se pudo cargar la documentación en local. Asegúrate de que el servidor Flask esté corriendo.</p>`;
+                });
+        }
+
+        // Cargar vista de pantalla dividida (Código DBML y Diagrama ER)
+        function loadDiagram() {
+            // Habilitar modo de pantalla ancha para maxima comodidad
+            document.getElementById('main-content').classList.add('wide-mode');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btn-diagram').classList.add('active');
+            document.getElementById('main-title').innerText = "Diseño de la Base de Datos";
+            document.getElementById('main-desc').innerText = "Visualización interactiva: Editor DBML a la izquierda y Diagrama ER (Mermaid) a la derecha.";
+
+            const view = document.getElementById('doc-view');
+            view.innerHTML = `
+                <div class="loader">
+                    <div class="spinner"></div>
+                </div>
+            `;
+
+            // Definición en formato Mermaid de la Base de Datos actual
+            const mermaidDefinition = `
+erDiagram
+    users {
+        int id PK
+        string email
+        string password_hash
+        string name
+        string public_slug
+        string role
+        boolean is_blocked
+        string password_status
+        timestamp created_at
+        timestamp updated_at
+    }
+    event_groups {
+        int id PK
+        int user_id FK
+        string name
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+    events {
+        int id PK
+        int group_id FK
+        int user_id FK
+        string title
+        text description
+        string slug
+        int duration
+        int buffer_time
+        boolean is_active
+        boolean is_public
+        timestamp created_at
+        timestamp updated_at
+    }
+    group_availabilities {
+        int id PK
+        int group_id FK
+        int day_of_week
+        time start_time
+        time end_time
+    }
+    appointments {
+        int id PK
+        int event_id FK
+        string client_name
+        string client_email
+        string client_phone
+        timestamp start_time
+        timestamp end_time
+        string status
+        text notes
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    users ||--o{ event_groups : "crea"
+    users ||--o{ events : "posee"
+    event_groups ||--o{ events : "contiene"
+    event_groups ||--o{ group_availabilities : "tiene"
+    events ||--o{ appointments : "recibe"
+            `;
+
+            // Obtener el código DBML dinámicamente desde el backend
+            fetch('/api/docs/dbml')
+                .then(res => {
+                    if (!res.ok) throw new Error("Fallo al obtener la especificación DBML");
+                    return res.json();
+                })
+                .then(data => {
+                    // Renderizar estructura de pantalla dividida (Split Screen)
+                    view.innerHTML = `
+                        <div class="db-split-container">
+                            <!-- Panel Izquierdo: Codigo DBML -->
+                            <div class="dbml-code-panel" id="dbml-container">
+                                <button class="copy-btn" id="dbml-copy">Copiar DBML</button>
+                                <pre><code class="language-js">${escapeHtml(data.dbml)}</code></pre>
+                            </div>
+                            
+                            <!-- Panel Derecho: Diagrama Interactivo de Mermaid -->
+                            <div class="diagram-panel">
+                                <div class="diagram-panel-title">Diagrama Entidad-Relación (ERD)</div>
+                                <div class="mermaid-wrapper">
+                                    <pre class="mermaid">${mermaidDefinition}</pre>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Formatear el DBML con PrismJS
+                    Prism.highlightElement(document.querySelector('.dbml-code-panel code'));
+
+                    // Copiar DBML al portapapeles
+                    const copyBtn = document.getElementById('dbml-copy');
+                    copyBtn.addEventListener('click', () => {
+                        navigator.clipboard.writeText(data.dbml).then(() => {
+                            copyBtn.innerText = '¡Copiado!';
+                            copyBtn.style.background = '#10b981';
+                            setTimeout(() => {
+                                copyBtn.innerText = 'Copiar DBML';
+                                copyBtn.style.background = 'rgba(255, 255, 255, 0.04)';
+                            }, 2000);
+                        });
+                    });
+
+                    // Compilar y renderizar el diagrama de Mermaid
+                    mermaid.run();
+                })
+                .catch(err => {
+                    view.innerHTML = `<p style="color: #ef4444; font-weight: 500;">Error: No se pudo renderizar la especificación de base de datos. ${err.message}</p>`;
+                });
+        }
+
+        // Utilidad para escapar HTML en código DBML
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Agregar botones "Copiar" a cada bloque pre
+        function addCopyButtons() {
+            const blocks = document.querySelectorAll('pre');
+            blocks.forEach(block => {
+                const code = block.querySelector('code');
+                if (code && !block.closest('.dbml-code-panel')) {
+                    const btn = document.createElement('button');
+                    btn.className = 'copy-btn';
+                    btn.innerText = 'Copiar';
+                    btn.addEventListener('click', () => {
+                        navigator.clipboard.writeText(code.innerText).then(() => {
+                            btn.innerText = '¡Copiado!';
+                            btn.style.background = '#10b981';
+                            setTimeout(() => {
+                                btn.innerText = 'Copiar';
+                                btn.style.background = 'rgba(255, 255, 255, 0.04)';
+                            }, 2000);
+                        });
+                    });
+                    block.appendChild(btn);
+                }
+            });
+        }
+
+        // Cargar por defecto el README.md del repositorio
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDoc('readme');
+        });
+    </script>
+</body>
+</html>

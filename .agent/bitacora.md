@@ -103,3 +103,33 @@ Para optimizar las tareas de administración, soporte y facturación SaaS de la 
 - **Seguridad en Rutas de Soporte:** La protección se hace a través del decorador personalizado `@tecnico_required()` que consume la identidad del JWT y valida dinámicamente el campo `role` en la base de datos, garantizando que un token robado o ajeno de usuario `admin` no pueda consumir las rutas de administración técnica.
 - **Regla Estricta de Parada**: Se detiene toda interacción con herramientas Git. El agente no realizará commits automáticos hasta recibir confirmación explícitamente.
 
+## [2026-05-24] - Visualizador de Documentación Interactiva Premium y Diagramación ER en Local
+
+### Contexto de Negocio
+Para que el equipo de frontend, soporte y administradores cuente con una referencia dinámica y centralizada de la API y el modelo físico, se diseñó e implementó un visualizador web interactivo de documentación en local accesible directamente en la raíz del servidor backend (`http://localhost:5000/`).
+
+### Cambios Realizados
+1. **API de Documentación en Backend:**
+   - Creado el módulo [app/routes/docs.py](file:///c:/Users/EQUIPO%20DELL/Documents/GitHub/Agenda-System/app/routes/docs.py) y Blueprint `docs_bp` registrado en la raíz `/` de Flask.
+   - Endpoints JSON agregados:
+     - `GET /api/docs/readme`: Lee y sirve el `README.md` del repositorio.
+     - `GET /api/docs/api-frontend`: Sirve el `API_FRONTEND.md`.
+     - `GET /api/docs/db-guide`: Sirve el `FRONTEND_DB_GUIDE.md`.
+     - `GET /api/docs/dbml`: Sirve la especificación conceptual relacional `database.dbml`.
+2. **Interfaz del Visualizador Web (`docs/index.html`):**
+   - Desarrollada una consola premium con tema oscuro profundo, Glassmorphism, y tipografías Outfit/Inter.
+   - **Manuales integrados:** Carga dinámica del `README.md` en el visor con botones interactivos para copiar bloques JSON en un clic.
+   - **Diagramador ERD Interactivo:** Integración de **Mermaid.js** de forma local. Al seleccionarlo, se despliega un panel de pantalla dividida dual (Split Screen) tipo `dbdiagram.io`:
+     - *Lado Izquierdo:* Código fuente físico de `database.dbml` con resaltado de sintaxis de PrismJS y copiado rápido.
+     - *Lado Derecho:* Diagrama Entidad-Relación vectorial, nítido y auto-escalable con la estructura completa de tablas y relaciones de citas.
+3. **Mantenimiento y Estándares de Estilo:**
+   - Corregidas advertencias de compatibilidad CSS reordenando las propiedades `background-clip: text` y `-webkit-background-clip: text` en las clases `.logo-text` y `h1` de `docs/index.html` para solventar avisos del linter del editor.
+   - Actualizado el `README.md` en su sección final agregando el manual interactivo de local y su enrutamiento.
+   - Registro de la limpieza y sincronización final de todos los cambios con el repositorio remoto.
+
+### Decisiones Técnicas
+- **Mermaid.js vía Cliente:** Se optó por renderizar vectorialmente el diagrama ER en el navegador del usuario utilizando Mermaid.js a través de CDN, lo cual evita instalar costosas dependencias de compilación gráfica o backend monolítico en Python, garantizando excelente portabilidad en Windows y excelente fluidez en local.
+- **División Dual (Split Screen):** Emular el flujo de dbdiagram.io permite que los desarrolladores puedan leer la definición exacta de tipos de datos a la izquierda mientras interactúan visualmente con el diagrama de relaciones a la derecha.
+- **Limpieza Estricta de Warnings:** Ajuste del orden de propiedades CSS para satisfacer el linter estático del IDE y mantener un codebase libre de advertencias.
+
+

@@ -24,7 +24,10 @@ Para evitar archivos monolíticos de difícil mantenimiento, el proyecto impleme
 * **Blueprints:** Las rutas de la aplicación están segmentadas por funcionalidad:
   * `auth_bp` (`/api/auth`): Registro, Login y generación de tokens de acceso JWT.
   * `dashboard_bp` (`/api/dashboard`): Rutas seguras y protegidas mediante tokens JWT.
-* **Modelos de Datos:** La lógica relacional de base de datos se encapsula en objetos de SQLAlchemy dentro del paquete `app/models/`.
+  * `public_bp` (`/api/public`): API pública de catálogos y reservas basadas en slugs para clientes (sin JWT).
+  * `technical_bp` (`/api/technical`): API de administración y soporte (bloquear usuarios por pago, crear cuentas y cambiar claves).
+  * `docs_bp` (`/`): Visualizador dinámico de documentación local interactiva.
+* **Modelos de Datos:** La lógica relacional de base de datos se encapsula en objetos de SQLAlchemy dentro del paquete `app/models/` (User, EventGroup, Event, GroupAvailability y Appointment).
 
 ---
 
@@ -41,13 +44,22 @@ Agenda-System/
 │   ├── extensions.py        # Instanciación limpia de DB, JWT y CORS
 │   ├── models/
 │   │   ├── __init__.py      # Exportación centralizada de modelos
-│   │   └── user.py          # Modelo User con hasheo de contraseñas Werkzeug
+│   │   ├── user.py          # Modelo User con soporte de slugs, bloqueos y roles
+│   │   ├── event_group.py   # Modelo EventGroup para agrupar agendas compartidas
+│   │   ├── event.py         # Modelo Event con slugs y restricción única compuesta
+│   │   └── appointment.py   # Modelo Appointment para citas con datos de clientes
 │   └── routes/
 │       ├── __init__.py      # Registro de Blueprints
-│       ├── auth.py          # Endpoints de Registro y Login con validaciones
-│       └── dashboard.py     # Endpoints del Dashboard (protegidos con JWT)
+│       ├── auth.py          # Registro, Login con control de bloqueos y cambio obligatorio
+│       ├── dashboard.py     # Endpoints del Dashboard (protegidos con JWT)
+│       ├── public.py        # Endpoints públicos basados en slugs
+│       ├── technical.py     # Endpoints de soporte técnico restringidos a rol
+│       └── docs.py          # Enrutador para el visor de la documentación interactiva
 ├── docs/
-│   └── API_FRONTEND.md     # Guía técnica detallada para el desarrollador de React
+│   ├── API_FRONTEND.md     # Guía técnica detallada para el desarrollador de React
+│   ├── FRONTEND_DB_GUIDE.md # Guía conceptual del esquema de base de datos con Grupos
+│   ├── database.dbml       # Especificación conceptual DBML de la base de datos
+│   └── index.html          # Interfaz web del visor interactivo premium
 ├── tests/
 │   └── verify_api.py       # Script autónomo de pruebas de integración local
 ├── .env.example            # Plantilla de variables de entorno del proyecto
@@ -129,7 +141,22 @@ python tests/verify_api.py
 
 ---
 
-## 📖 Documentación de Integración con el Frontend (React)
+## 📖 Documentación de Integración Interactiva y Manuales 💻
 
-Toda la documentación relacionada con la API para el desarrollador Frontend, incluyendo URLs base, cabeceras HTTP necesarias para adjuntar el JWT y payloads JSON exactos de petición y respuesta, se encuentra disponible en:
-* 👉 **[API_FRONTEND.md](file:///C:/Users/EQUIPO%20DELL/Documents/GitHub/Agenda-System/docs/API_FRONTEND.md)**
+Para facilitar el desarrollo del frontend en React y las tareas de administración, hemos implementado una **consola interactiva de documentación premium** directamente en la raíz local del servidor backend.
+
+### 🌟 Visor de Documentación Interactiva en Local
+Al iniciar tu servidor local de desarrollo (`python run.py`), ingresa a tu navegador en:
+👉 **[http://localhost:5000/](http://localhost:5000/)**
+
+En este visor interactivo (diseñado en un elegante Dark Mode y con soporte Glassmorphic) podrás:
+*   Alternar de forma instantánea entre la **API del Frontend** y la **Guía de Base de Datos**.
+*   Consultar los endpoints, parámetros requeridos y respuestas detalladas.
+*   **Copiar códigos JSON en un clic:** Cada bloque de código cuenta con un botón interactivo para copiar payloads de ejemplo al portapapeles con micro-animaciones.
+*   Resaltado de sintaxis sintáctica automática en bloques JSON y HTTP (PrismJS).
+
+### 📄 Archivos de Documentación Técnica en Markdown
+Si prefieres leer la documentación directamente en archivos Markdown dentro del repositorio, se encuentran disponibles en:
+*   🚀 **[API_FRONTEND.md](file:///C:/Users/EQUIPO%20DELL/Documents/GitHub/Agenda-System/docs/API_FRONTEND.md):** Manual técnico detallado de endpoints, cabeceras HTTP, autenticación JWT, rol técnico, bloqueos y restablecimiento obligatorio de contraseñas.
+*   💾 **[FRONTEND_DB_GUIDE.md](file:///C:/Users/EQUIPO%20DELL/Documents/GitHub/Agenda-System/docs/FRONTEND_DB_GUIDE.md):** Guía relacional del esquema de base de datos con la lógica de **Grupos de Eventos** (`event_groups`) y disponibilidades compartidas para evitar overbooking.
+*   📐 **[database.dbml](file:///C:/Users/EQUIPO%20DELL/Documents/GitHub/Agenda-System/docs/database.dbml):** Especificación conceptual relacional DBML.

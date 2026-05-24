@@ -19,11 +19,13 @@ def create_app(config_class=Config):
     from app.routes.dashboard import dashboard_bp
     from app.routes.public import public_bp
     from app.routes.technical import technical_bp
+    from app.routes.docs import docs_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
     app.register_blueprint(public_bp, url_prefix='/api/public')
     app.register_blueprint(technical_bp, url_prefix='/api/technical')
+    app.register_blueprint(docs_bp, url_prefix='/')
     
     # Manejo de errores global en formato JSON
     @app.errorhandler(404)
