@@ -1,110 +1,115 @@
 # Guía de Base de Datos para el Desarrollador de Frontend
 
-Esta guía detalla la estructura de la base de datos de nuestro sistema de citas con el fin de facilitar la integración de la API con el Frontend. Aquí encontrarás los formatos de datos requeridos, flujos lógicos clave y las estructuras de los endpoints teóricos correspondientes.
+Esta guía detalla la estructura actualizada de la base de datos con soporte para **Grupos de Eventos** (`event_groups`), la cual evita el solapamiento no deseado de citas entre distintos servicios y permite gestionar múltiples calendarios de disponibilidad de forma independiente (ej. consultorios o doctores distintos).
 
 ---
 
 ## 1. Estructura de Tablas y Atributos
 
 ### Tabla: `users` (Administradores/Dueños de Comercio)
-Guarda la información de inicio de sesión y datos básicos del comercio.
-*   **`id`** (`Integer`): ID autoincrementable.
-*   **`email`** (`String`): Correo único de acceso del administrador.
+Guarda los datos de acceso del administrador del comercio.
+*   **`id`** (`Integer`): ID autoincrementable (PK).
+*   **`email`** (`String`): Correo único del administrador.
 *   **`name`** (`String`): Nombre del comercio o administrador.
 *   **`role`** (`String`): Rol del usuario (por defecto `"admin"`).
 
-### Tabla: `events` (Tipos de Cita / Servicios)
-Guarda los diferentes servicios o tipos de citas configurables creados por el admin.
-*   **`id`** (`Integer`): ID autoincrementable.
-*   **`user_id`** (`Integer`): ID del administrador dueño del servicio.
-*   **`title`** (`String`): Nombre del servicio (ej. *"Asesoría Técnica de 30 min"*).
-*   **`description`** (`Text`): Descripción detallada visible para el cliente (opcional).
-*   **`duration`** (`Integer`): Duración de la cita en **minutos**.
-*   **`buffer_time`** (`Integer`): Tiempo de espera o descanso obligatorio después de cada cita en **minutos**.
-*   **`is_active`** (`Boolean`): Indica si el servicio está activo y disponible para reservas.
+### Tabla: `event_groups` (NUEVA: Grupos de Citas / Recursos)
+Representa un calendario unificado de disponibilidad. Múltiples servicios pueden pertenecer al mismo grupo para compartir agenda y evitar sobre-reservas.
+*   **`id`** (`Integer`): ID autoincrementable (PK).
+*   **`user_id`** (`Integer`): ID del administrador dueño del grupo.
+*   **`name`** (`String`): Nombre descriptivo (ej. *"Consultorio Dental A"*, *"Estilista María"*).
+*   **`is_active`** (`Boolean`): Indica si el grupo y sus eventos están disponibles.
 
-### Tabla: `event_availabilities` (Disponibilidad Horaria Recurrente)
-Guarda los rangos horarios recurrentes semanales asignados a cada tipo de cita.
-*   **`id`** (`Integer`): ID autoincrementable.
-*   **`event_id`** (`Integer`): ID del evento/servicio asociado.
-*   **`day_of_week`** (`Integer`): Día de la semana en formato entero (**1 = Lunes**, **7 = Domingo**).
-*   **`start_time`** (`Time`): Hora de inicio de atención (en formato `"HH:MM:SS"`, ej. `"09:00:00"`).
-*   **`end_time`** (`Time`): Hora de fin de atención (en formato `"HH:MM:SS"`, ej. `"17:00:00"`).
+### Tabla: `events` (Servicios / Tipos de Cita)
+Guarda los diferentes servicios o tipos de citas configurables creados por el admin. **Ahora está asociado a un grupo.**
+*   **`id`** (`Integer`): ID autoincrementable (PK).
+*   **`group_id`** (`Integer`): ID del grupo al que pertenece el evento. **Indispensable.**
+*   **`title`** (`String`): Nombre del servicio (ej. *"Corte de Cabello"*, *"Limpieza Dental"*).
+*   **`description`** (`Text`): Descripción detallada para el cliente (opcional).
+*   **`duration`** (`Integer`): Duración de la cita en **minutos**.
+*   **`buffer_time`** (`Integer`): Tiempo de espera o descanso requerido después de la cita en **minutos**.
+*   **`is_active`** (`Boolean`): Indica si el servicio está activo para reservas.
+
+### Tabla: `group_availabilities` (Disponibilidad Horaria del Grupo)
+Define los rangos horarios semanales recurrentes en los que está activo el grupo de eventos.
+*   **`id`** (`Integer`): ID autoincrementable (PK).
+*   **`group_id`** (`Integer`): ID del grupo asociado.
+*   **`day_of_week`** (`Integer`): Día de la semana (**1 = Lunes**, **7 = Domingo**).
+*   **`start_time`** (`Time`): Hora de inicio (formato `"HH:MM:SS"`, ej. `"09:00:00"`).
+*   **`end_time`** (`Time`): Hora de fin (formato `"HH:MM:SS"`, ej. `"18:00:00"`).
 
 ### Tabla: `appointments` (Citas Reservadas)
-Guarda las citas agendadas por los clientes externos.
-*   **`id`** (`Integer`): ID autoincrementable.
-*   **`event_id`** (`Integer`): ID del tipo de cita reservada.
-*   **`client_name`** (`String`): Nombre completo del cliente.
-*   **`client_email`** (`String`): Correo electrónico del cliente.
+Guarda las citas agendadas por los clientes.
+*   **`id`** (`Integer`): ID autoincrementable (PK).
+*   **`event_id`** (`Integer`): ID del evento específico reservado.
+*   **`client_name`** (`String`): Nombre del cliente.
+*   **`client_email`** (`String`): Correo del cliente.
 *   **`client_phone`** (`String`): **Teléfono del cliente** (dato crítico para que el admin lo contacte).
-*   **`start_time`** (`DateTime`): Fecha y hora de inicio de la cita (formato ISO-8601 UTC: `"YYYY-MM-DDTHH:MM:SSZ"`).
-*   **`end_time`** (`DateTime`): Fecha y hora de fin de la cita (calculada automáticamente sumando la duración al inicio).
-*   **`status`** (`String`): Estado de la cita (valores posibles: `"pending"`, `"confirmed"`, `"cancelled"`).
-*   **`notes`** (`Text`): Mensaje o comentarios del cliente al reservar (opcional).
+*   **`start_time`** (`DateTime`): Fecha y hora de inicio (ISO-8601 UTC: `"YYYY-MM-DDTHH:MM:SSZ"`).
+*   **`end_time`** (`DateTime`): Fecha y hora de fin (calculada sumando la duración al inicio).
+*   **`status`** (`String`): Estado de la cita (`"pending"`, `"confirmed"`, `"cancelled"`).
+*   **`notes`** (`Text`): Comentarios o peticiones del cliente (opcional).
 
 ---
 
-## 2. Formato de Datos Requeridos (Estándares)
-
-Para asegurar una comunicación limpia con la API, el Frontend debe enviar los datos en los siguientes formatos estandarizados:
+## 2. Formato de Datos Requeridos
 
 1.  **Fechas y Horas Completas (Citas):**
-    *   Utilizar formato **ISO-8601 UTC**.
-    *   *Ejemplo:* `2026-05-24T14:30:00Z`
+    *   Utilizar formato **ISO-8601 UTC**. Ej: `2026-05-24T14:30:00Z`.
 2.  **Horas de Disponibilidad Semanal:**
-    *   Utilizar formato de 24 horas `"HH:MM:SS"` o `"HH:MM"`.
-    *   *Ejemplo:* `09:00:00` o `18:30:00`
+    *   Utilizar formato de 24 horas `"HH:MM:SS"` o `"HH:MM"`. Ej: `09:00:00`.
 3.  **Días de la semana:**
     *   Números enteros del **1 (Lunes)** al **7 (Domingo)**.
 
 ---
 
-## 3. Flujos de Trabajo Recomendados para el Frontend
+## 3. Flujos de Trabajo Actualizados para el Frontend
 
-### Flujo A: Creación y Configuración del Servicio (Admin)
-1.  **Crear el Evento:** El administrador completa un formulario con el título, descripción, duración y tiempo de espera (buffer). El frontend envía una petición POST al endpoint de creación de eventos.
-2.  **Configurar Disponibilidad:** El administrador asigna su horario semanal. El frontend envía un array con la disponibilidad recurrente.
-    *   *Ejemplo de payload recomendado a enviar:*
+```mermaid
+graph TD
+    A[Crear Grupo de Eventos] --> B[Definir Disponibilidad del Grupo]
+    B --> C[Crear Eventos bajo el Group ID]
+    C --> D[Clientes Agendan Citas]
+```
+
+### Flujo A: Configuración de la Agenda (Admin)
+1.  **Crear el Grupo:** El administrador crea una agenda unificada (ej. *"Dr. Alejandro - Consultorio A"*).
+2.  **Configurar Horarios del Grupo:** El administrador define cuándo atiende este grupo.
+    *   *Payload a enviar a `group_availabilities`:*
         ```json
         {
+          "group_id": 1,
           "availabilities": [
-            { "day_of_week": 1, "start_time": "09:00", "end_time": "13:00" },
-            { "day_of_week": 1, "start_time": "14:00", "end_time": "18:00" },
+            { "day_of_week": 1, "start_time": "09:00", "end_time": "17:00" },
             { "day_of_week": 2, "start_time": "09:00", "end_time": "17:00" }
           ]
         }
         ```
+3.  **Crear Servicios:** El administrador da de alta los servicios asignándolos a ese grupo.
+    *   *Ejemplo:* *"Limpieza Dental"* (duración 30 min) y *"Ortodoncia"* (duración 60 min) creados con `group_id: 1`.
 
-### Flujo B: Renderizado del Calendario y Generación de Slots (Cliente)
-Para mostrar al cliente las horas disponibles para reservar:
-1.  El cliente selecciona un servicio (`event_id`) y un día específico en el calendario.
-2.  El frontend realiza una petición HTTP al backend para obtener las horas disponibles para ese día.
-3.  **¿Qué calcula el backend?**
-    *   Obtiene la disponibilidad base para ese día de la semana desde `event_availabilities`.
-    *   Busca las citas ya reservadas en `appointments` para esa fecha específica.
-    *   Calcula los bloques libres (slots) restando las citas existentes y aplicando el `buffer_time` configurado.
-4.  El frontend muestra los slots de tiempo resultantes para que el cliente seleccione uno.
+### Flujo B: Búsqueda de Slots Libres y Evitación de Solapamientos (Cliente)
+Para renderizar las horas disponibles de un evento:
+1.  El cliente selecciona un evento (ej. *"Limpieza Dental"*).
+2.  El frontend consulta disponibilidad al backend para una fecha.
+3.  **Lógica del Backend (Crucial):**
+    *   Obtiene la disponibilidad de la tabla `group_availabilities` del grupo correspondiente.
+    *   Busca **todas las citas confirmadas de cualquier evento que pertenezca al mismo `group_id`** en esa fecha.
+    *   **Resultado:** Si ya hay una cita de *"Ortodoncia"* reservada de `10:00` a `11:00`, ese horario se bloqueará automáticamente para la *"Limpieza Dental"*, evitando solapamientos involuntarios del mismo profesional.
 
 ### Flujo C: Confirmación de Cita (Cliente)
-Cuando el cliente elige una hora disponible, se le solicita llenar un formulario con su nombre, correo y número telefónico. El frontend envía una petición POST para crear la cita:
+El cliente reserva una hora proporcionando sus datos de contacto. POST a la API:
 ```json
 {
-  "event_id": 3,
-  "client_name": "Juan Pérez",
-  "client_email": "juan.perez@example.com",
-  "client_phone": "+56912345678",
-  "start_time": "2026-05-26T10:00:00Z",
-  "notes": "Prefiero que nos contactemos por WhatsApp antes de la cita."
+  "event_id": 2,
+  "client_name": "Sofía Martínez",
+  "client_email": "sofia@example.com",
+  "client_phone": "+56998765432",
+  "start_time": "2026-05-26T15:30:00Z",
+  "notes": "Primera visita al consultorio."
 }
 ```
 
-### Flujo D: Panel de Control e Interacción con el Cliente (Admin)
-En el panel del comercio, el administrador debe poder ver la lista de citas agendadas y gestionarlas:
-1.  El frontend realiza una petición GET a las citas del administrador.
-2.  La UI debe mostrar los datos críticos de forma clara:
-    *   **Fecha y hora** de la cita.
-    *   **Servicio** agendado.
-    *   **Nombre del cliente**.
-    *   **Teléfono del cliente** renderizado de forma accionable (ej. con un botón directo a WhatsApp `https://wa.me/telefono` o un enlace de llamada `tel:telefono`).
-    *   **Acciones:** Botón para confirmar (`status = "confirmed"`) o cancelar (`status = "cancelled"`).
+### Flujo D: Agenda y Contacto Directo (Admin)
+El administrador visualiza todas sus citas de forma unificada agrupando por el recurso o profesional. El backend resolverá los datos cruzando las relaciones (`appointment.event.group`).
+*   La interfaz del frontend debe mostrar claramente el **nombre y teléfono del cliente** con accesos directos de comunicación (como botones de WhatsApp o llamadas directas: `tel:+56998765432`).
