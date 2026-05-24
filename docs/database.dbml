@@ -1,0 +1,58 @@
+// Documentacion del esquema de base de datos para el Sistema de Citas
+// Comentarios en español cortos para facilitar la lectura
+
+// Tabla de Usuarios (Administradores/Dueños de Comercio)
+Table users {
+  id integer [primary key, increment]
+  email varchar(120) [unique, not null, note: "Correo de acceso del administrador"]
+  password_hash varchar(255) [not null, note: "Contraseña hasheada"]
+  name varchar(80) [note: "Nombre del comercio o administrador"]
+  role varchar(20) [default: "admin", note: "Rol del usuario (admin por defecto)"]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+// Tabla de Eventos (Plantillas de citas tipo Calendly)
+Table events {
+  id integer [primary key, increment]
+  user_id integer [ref: > users.id, not null, note: "Dueño de este tipo de evento"]
+  title varchar(150) [not null, note: "Nombre del servicio o tipo de cita"]
+  description text [note: "Descripción del evento"]
+  duration integer [not null, note: "Duración de la cita en minutos"]
+  buffer_time integer [default: 0, note: "Espacio de espera entre citas en minutos"]
+  is_active boolean [default: true, note: "Si el evento está activo para agendar"]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+// Disponibilidad horaria recurrente del evento por día de la semana
+Table event_availabilities {
+  id integer [primary key, increment]
+  event_id integer [ref: > events.id, not null]
+  day_of_week integer [not null, note: "Día de la semana (1: Lunes, 7: Domingo)"]
+  start_time time [not null, note: "Hora de inicio de disponibilidad"]
+  end_time time [not null, note: "Hora de fin de disponibilidad"]
+  
+  Indexes {
+    (event_id, day_of_week) [name: "idx_event_day"]
+  }
+}
+
+// Citas Agendadas por clientes
+Table appointments {
+  id integer [primary key, increment]
+  event_id integer [ref: > events.id, not null]
+  client_name varchar(100) [not null, note: "Nombre del cliente"]
+  client_email varchar(120) [not null, note: "Correo del cliente"]
+  client_phone varchar(20) [not null, note: "Teléfono del cliente para contacto"]
+  start_time timestamp [not null, note: "Inicio de la cita"]
+  end_time timestamp [not null, note: "Fin de la cita (inicio + duracion del evento)"]
+  status varchar(20) [default: "pending", note: "Estado (pending, confirmed, cancelled)"]
+  notes text [note: "Notas opcionales que envíe el cliente"]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  Indexes {
+    (event_id, start_time) [name: "idx_event_time"]
+  }
+}
