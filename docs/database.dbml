@@ -1,14 +1,16 @@
 // Documentacion del esquema de base de datos para el Sistema de Citas
 // Comentarios en español cortos para facilitar la lectura
 
-// Tabla de Usuarios (Administradores/Dueños de Comercio)
+// Tabla de Usuarios (Administradores/Dueños de Comercio y Soporte Técnico)
 Table users {
   id integer [primary key, increment]
   email varchar(120) [unique, not null, note: "Correo de acceso del administrador"]
   password_hash varchar(255) [not null, note: "Contraseña hasheada"]
   name varchar(80) [note: "Nombre del comercio o administrador"]
   public_slug varchar(80) [unique, not null, note: "Slug único para la URL del comercio"]
-  role varchar(20) [default: "admin", note: "Rol del usuario (admin por defecto)"]
+  role varchar(20) [default: "admin", note: "Rol del usuario (admin, tecnico)"]
+  is_blocked boolean [default: false, note: "Indica si la cuenta está suspendida administrativamente"]
+  password_status varchar(20) [default: "active", note: "Estatus de la contraseña (active, on_change)"]
   created_at timestamp [default: `now()`]
   updated_at timestamp [default: `now()`]
 }

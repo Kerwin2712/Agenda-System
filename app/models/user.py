@@ -12,6 +12,9 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     name = db.Column(db.String(80), nullable=True)
     public_slug = db.Column(db.String(80), unique=True, nullable=False, index=True)
+    role = db.Column(db.String(20), default="admin", nullable=False) # admin, tecnico, etc.
+    is_blocked = db.Column(db.Boolean, default=False, nullable=False) # Suspension por pagos
+    password_status = db.Column(db.String(20), default="active", nullable=False) # active, on_change
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -42,6 +45,9 @@ class User(db.Model):
             "email": self.email,
             "name": self.name,
             "public_slug": self.public_slug,
+            "role": self.role,
+            "is_blocked": self.is_blocked,
+            "password_status": self.password_status,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }

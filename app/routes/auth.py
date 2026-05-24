@@ -1,6 +1,6 @@
 import re
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from app.extensions import db
 from app.models.user import User
 
@@ -19,6 +19,7 @@ def register():
     email = data.get('email', '').strip()
     password = data.get('password', '')
     name = data.get('name', '').strip()
+    role = data.get('role', 'admin').strip() # Permite registrar rol admin o tecnico
     
     # Validacion robusta de campos obligatorios
     if not email or not password:
@@ -37,7 +38,7 @@ def register():
             return jsonify({"error": "El correo ya esta registrado"}), 400
             
         # Crear usuario y guardar en BD
-        user = User(email=email, name=name if name else None)
+        user = User(email=email, name=name if name else None, role=role)
         user.set_password(password)
         
         db.session.add(user)
@@ -72,10 +73,23 @@ def login():
         if not user or not user.check_password(password):
             return jsonify({"error": "Credenciales invalidas"}), 401
             
+        # Verificar suspension de la cuenta por pagos
+        if user.is_blocked:
+            return jsonify({"error": "Cuenta suspendida o bloqueada administrativamente"}), 403
+            
         # Generar token JWT de acceso
-        # Guardar el ID como identidad del token
         access_token = create_access_token(identity=str(user.id))
         
+        # Verificar si requiere cambio obligatorio de clave temporal
+        if user.password_status == 'on_change':
+            return jsonify({
+                "message": "Cambio de contrasenia temporal obligatorio requerido",
+                "require_password_change": True,
+                "access_token": access_token,
+                "token_type": "Bearer",
+                "user": user.to_dict()
+            }), 200
+            
         return jsonify({
             "message": "Inicio de sesion exitoso",
             "access_token": access_token,
@@ -86,3 +100,39 @@ def login():
     except Exception as e:
         # Manejo robusto de excepciones
         return jsonify({"error": f"Error al procesar inicio de sesion: {str(e)}"}), 500
+
+@auth_bp.route('/reset-temp-password', methods=['POST'])
+@jwt_required()
+def reset_temp_password():
+    # Restablecer contraseña temporal obligatoria
+    data = request.get_json() or {}
+    new_password = data.get('new_password', '')
+    
+    if not new_password or len(new_password) < 6:
+        return jsonify({"error": "La nueva contrasenia debe tener al menos 6 caracteres"}), 400
+        
+    try:
+        current_user_id = get_jwt_identity()
+        user = User.query.get(int(current_user_id))
+        
+        if not user:
+            return jsonify({"error": "Usuario no encontrado"}), 404
+            
+        # Validar que requiera el cambio obligatorio
+        if user.password_status != 'on_change':
+            return jsonify({"error": "No se requiere un cambio obligatorio de contrasenia"}), 400
+            
+        # Actualizar contraseña y pasar a active
+        user.set_password(new_password)
+        user.password_status = 'active'
+        
+        db.session.commit()
+        
+        return jsonify({
+            "message": "Contrasenia restablecida exitosamente. Ahora tu cuenta esta activa.",
+            "user": user.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Error al actualizar contrasenia temporal: {str(e)}"}), 500

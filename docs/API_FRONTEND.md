@@ -251,6 +251,166 @@ Obtiene la información de un servicio específico utilizando el slug del usuari
 
 ---
 
+### 5. API de Soporte Técnico (Solo Rol: `tecnico`)
+
+Estas rutas permiten al equipo de soporte técnico gestionar las cuentas de la plataforma, suspender accesos por impago y asignar contraseñas temporales. **Todas requieren la cabecera `Authorization: Bearer <token_tecnico>` del usuario con rol técnico.**
+
+#### A. Crear Usuario (Admin o Técnico)
+*   **Ruta:** `/api/technical/users`
+*   **Método:** `POST`
+*   **Request Body:**
+    ```json
+    {
+      "email": "nuevo.admin@ejemplo.com",
+      "password": "contraseñasupersegura",
+      "name": "Clínica Dental Gonzalez",
+      "role": "admin"
+    }
+    ```
+*   **Respuesta Exitosa (`201 Created`):**
+    ```json
+    {
+      "message": "Usuario creado exitosamente por soporte tecnico",
+      "user": {
+        "id": 10,
+        "email": "nuevo.admin@ejemplo.com",
+        "name": "Clínica Dental Gonzalez",
+        "public_slug": "nuevoadmin",
+        "role": "admin",
+        "is_blocked": false,
+        "password_status": "active",
+        "created_at": "2026-05-24T12:00:00.000Z",
+        "updated_at": "2026-05-24T12:00:00.000Z"
+      }
+    }
+    ```
+
+---
+
+#### B. Eliminar Usuario
+*   **Ruta:** `/api/technical/users/<id>`
+*   **Método:** `DELETE`
+*   **Respuesta Exitosa (`200 OK`):**
+    ```json
+    {
+      "message": "Usuario eliminado exitosamente"
+    }
+    ```
+
+---
+
+#### C. Bloquear Usuario (Suspensión por Pago / Administrativo)
+*   **Ruta:** `/api/technical/users/<id>/block`
+*   **Método:** `POST`
+*   **Respuesta Exitosa (`200 OK`):**
+    ```json
+    {
+      "message": "Usuario bloqueado y suspendido exitosamente",
+      "user": {
+        "id": 10,
+        "email": "admin@ejemplo.com",
+        "is_blocked": true,
+        "role": "admin",
+        "password_status": "active"
+      }
+    }
+    ```
+
+---
+
+#### D. Desbloquear Usuario (Reactivación de Cuenta)
+*   **Ruta:** `/api/technical/users/<id>/unblock`
+*   **Método:** `POST`
+*   **Respuesta Exitosa (`200 OK`):**
+    ```json
+    {
+      "message": "Usuario desbloqueado y reactivado exitosamente",
+      "user": {
+        "id": 10,
+        "email": "admin@ejemplo.com",
+        "is_blocked": false,
+        "role": "admin",
+        "password_status": "active"
+      }
+    }
+    ```
+
+---
+
+#### E. Cambiar Contraseña Manualmente (Forzar Cambio Obligatorio)
+Establece una contraseña temporal de soporte y marca el estatus del usuario como `"on_change"`.
+*   **Ruta:** `/api/technical/users/<id>/change-password`
+*   **Método:** `POST`
+*   **Request Body:**
+    ```json
+    {
+      "new_password": "clave_temporal_123"
+    }
+    ```
+*   **Respuesta Exitosa (`200 OK`):**
+    ```json
+    {
+      "message": "Contrasenia modificada exitosamente. Se requerira cambio obligatorio en el proximo login.",
+      "user": {
+        "id": 10,
+        "email": "admin@ejemplo.com",
+        "is_blocked": false,
+        "role": "admin",
+        "password_status": "on_change"
+      }
+    }
+    ```
+
+---
+
+### 6. Flujo de Cambio de Contraseña Obligatoria (Cliente Admin)
+
+Cuando soporte técnico asigna una contraseña manual, el sistema fuerza su restablecimiento de la siguiente manera:
+
+1.  **Inicio de sesión del cliente:** El cliente inicia sesión usando su correo y la contraseña temporal.
+    *   **Respuesta de la API (`200 OK` con bandera especial):**
+        ```json
+        {
+          "message": "Cambio de contrasenia temporal obligatorio requerido",
+          "require_password_change": true,
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "token_type": "Bearer",
+          "user": {
+            "id": 10,
+            "email": "admin@ejemplo.com",
+            "password_status": "on_change",
+            "is_blocked": false,
+            "role": "admin"
+          }
+        }
+        ```
+2.  **Bloqueo y Redirección en Frontend (React):** El frontend detecta la presencia del flag `"require_password_change": true`, bloquea la navegación habitual al panel y redirige al usuario forzosamente a un formulario para establecer una nueva clave.
+3.  **Establecer Contraseña Definitiva:** El cliente ingresa su nueva contraseña definitiva en el formulario. El frontend consume el endpoint de reset enviando el token obtenido en el login:
+    *   **Ruta:** `/api/auth/reset-temp-password`
+    *   **Método:** `POST`
+    *   **Headers:** `Authorization: Bearer <access_token>`
+    *   **Request Body:**
+        ```json
+        {
+          "new_password": "mi_nueva_clave_definitiva_segura"
+        }
+        ```
+    *   **Respuesta Exitosa (`200 OK`):**
+        ```json
+        {
+          "message": "Contrasenia restablecida exitosamente. Ahora tu cuenta esta activa.",
+          "user": {
+            "id": 10,
+            "email": "admin@ejemplo.com",
+            "password_status": "active",
+            "is_blocked": false,
+            "role": "admin"
+          }
+        }
+        ```
+
+---
+
 ## 🛠️ Errores Genéricos del Servidor
 
 La API tiene controladores globales para asegurar que cualquier fallo no controlado responda con un JSON en lugar de una página HTML de error de Flask.
